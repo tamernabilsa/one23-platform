@@ -105,7 +105,8 @@
                 <strong class="text-xs text-gray-400 block mb-1">سيناريو الفيديو التفاعلي:</strong>
                 <div id="modalScript" class="text-sm bg-gray-800 p-3 rounded-xl leading-relaxed space-y-2"></div>
             </div>
-            <div class="flex justify-end gap-3 pt-2">
+            <div class="flex flex-wrap justify-end gap-3 pt-2">
+                <a id="modalWhatsappBtn" href="#" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-sm font-bold px-4 py-2 rounded-xl transition">مشاركة العرض عبر واتساب 💬</a>
                 <a id="modalMailBtn" href="#" class="bg-blue-600 hover:bg-blue-700 text-sm font-bold px-4 py-2 rounded-xl transition">إرسال عرض عبر البريد ✉️</a>
                 <button onclick="closeModal()" class="bg-gray-800 hover:bg-gray-700 text-sm px-4 py-2 rounded-xl transition">إغلاق</button>
             </div>
@@ -204,6 +205,9 @@
             
             const cleanScript = String(lead.video_script || '').replace(/\\n/g, '\n').split('\n').map(line => `<p>${line}</p>`).join('');
             document.getElementById('modalScript').innerHTML = cleanScript;
+
+            const waText = encodeURIComponent(`السلام عليكم،\nقمنا بتحليل موقعكم (${lead.company_url}) عبر منصة one23.sa وأعددنا لكم فكرة فيديو تعريفي تفاعلي مخصصة:\n\n${lead.video_script}\n\nيسعدنا تنفيذها لكم!`);
+            document.getElementById('modalWhatsappBtn').href = `https://wa.me/?text=${waText}`;
 
             const mailSubject = encodeURIComponent(`فكرة فيديو تعريفي مخصصة لشركتكم (${lead.company_url}) - منصة one23.sa`);
             const mailBody = encodeURIComponent(`السلام عليكم،\n\nقمنا بتحليل موقعكم (${lead.company_url}) وأعددنا لكم سيناريو فيديو تفاعلي مقترح:\n\n${lead.video_script}\n\nيسعدنا تواصلكم لتنفيذه،\nفريق one23.sa`);
