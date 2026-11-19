@@ -8,7 +8,7 @@ import httpx
 import os
 import json
 
-app = FastAPI(title="One23 AI Engine + Supabase + Admin + Outreach", version="5.0")
+app = FastAPI(title="One23 AI Engine + Supabase + Admin + Outreach", version="5.1")
 
 app.add_middleware(
     CORSMiddleware,
@@ -42,17 +42,19 @@ async def fetch_website_text(url: str) -> str:
             paragraphs = " ".join([p.get_text(strip=True) for p in soup.find_all(["h1", "h2", "p"])[:15]])
             return f"عنوان الموقع: {title}\nالمحتوى: {paragraphs}"[:2500]
     except Exception:
-        return f"رابط الشركة: {url} (لم نتمكن من سحب النص التفصيلي، قم بالتحليل بناءً على اسم النطاق)."
+        return f"رابط الشركة: {url}"
 
-async def send_outreach_emails(client_email: str, company_url: str, audience: str, message: str, script_html: str):
+async def send_outreach_emails(client_email: str, company_url: str, audience: str, message: str, script_html: str) -> str:
     if not RESEND_API_KEY:
-        return
+        return "مفتاح RESEND_API_KEY غير مضاف في Render"
+
     headers = {
         "Authorization": f"Bearer {RESEND_API_KEY}",
         "Content-Type": "application/json"
     }
-    async with httpx.AsyncClient(timeout=10.0) as http_client:
-        # 1. إرسال نسخة من التحليل والسيناريو للعميل فوراً
+    status_msg = "لم يتم الإرسال"
+
+    async with httpx.AsyncClient(timeout=15.0) as http_client:
         if client_email:
             client_html = f"""
             <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; background: #0f172a; color: #f8fafc; padding: 24px; border-radius: 12px;">
@@ -63,31 +65,29 @@ async def send_outreach_emails(client_email: str, company_url: str, audience: st
                     <p><strong style="color: #60a5fa;">💡 الرسالة التسويقية:</strong><br>{message}</p>
                     <p><strong style="color: #60a5fa;">🎬 سيناريو الفيديو التفاعلي المقترح:</strong><br>{script_html}</p>
                 </div>
-                <p>هل ترغبون في تحويل هذا السيناريو إلى فيديو احترافي خلال 48 ساعة؟</p>
                 <a href="https://one23.sa/#pricing" style="display: inline-block; background: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">استعرض الباقات واطلب الفيديو الآن</a>
             </div>
             """
-            try:
-                await http_client.post("https://api.resend.com/emails", headers=headers, json={
-                    "from": SENDER_EMAIL,
-                    "to": [client_email],
-                    "subject": f"سيناريو الفيديو التفاعلي المقترح لشركتكم ({company_url}) - one23.sa",
-                    "html": client_html
-                })
-            except Exception as e:
-                print(f"Resend client email warning: {e}")
+            res = await http_client.post("https://api.resend.com/emails", headers=headers, json={
+                "from": SENDER_EMAIL,
+                "to": [client_email],
+                "subject": f"سيناريو الفيديو التفاعلي المقترح لشركتكم ({company_url}) - one23.sa",
+                "html": client_html
+            })
+            if res.status_code in (200, 201):
+                status_msg = "تم إرسال الإيميل بنجاح"
+            else:
+                status_msg = f"فشل إرسال Resend: {res.text}"
 
-        # 2. إرسال إشعار فوري للإدارة بوجود عميل جديد
         if ADMIN_NOTIFY_EMAIL:
-            try:
-                await http_client.post("https://api.resend.com/emails", headers=headers, json={
-                    "from": SENDER_EMAIL,
-                    "to": [ADMIN_NOTIFY_EMAIL],
-                    "subject": f"🔔 عميل جديد على one23.sa: {company_url}",
-                    "html": f"<div dir='rtl'><h3>تم تسجيل عميل جديد:</h3><p><strong>الموقع:</strong> {company_url}</p><p><strong>البريد:</strong> {client_email or 'غير مدخل'}</p><p><strong>السيناريو:</strong><br>{script_html}</p></div>"
-                })
-            except Exception as e:
-                print(f"Resend admin notify warning: {e}")
+            await http_client.post("https://api.resend.com/emails", headers=headers, json={
+                "from": SENDER_EMAIL,
+                "to": [ADMIN_NOTIFY_EMAIL],
+                "subject": f"🔔 عميل جديد على one23.sa: {company_url}",
+                "html": f"<div dir='rtl'><h3>تم تسجيل عميل جديد:</h3><p><strong>الموقع:</strong> {company_url}</p><p><strong>البريد:</strong> {client_email or 'غير مدخل'}</p><p><strong>السيناريو:</strong><br>{script_html}</p></div>"
+            })
+
+    return status_msg
 
 @app.get("/")
 def read_root():
@@ -100,9 +100,6 @@ async def generate_campaign(data: CampaignRequest):
 
     if not url:
         raise HTTPException(status_code=400, detail="الرجاء إدخال رابط صحيح للشركة.")
-
-    if not os.environ.get("OPENAI_API_KEY"):
-        raise HTTPException(status_code=500, detail="مفتاح OpenAI API غير مضاف في إعدادات السيرفر.")
 
     site_content = await fetch_website_text(url)
 
@@ -132,7 +129,7 @@ async def generate_campaign(data: CampaignRequest):
 
         raw_content = completion.choices[0].message.content
         if not raw_content:
-            raise ValueError("لم يرجع الذكاء الاصطناعي أي محتوى، يرجى المحاولة مرة أخرى.")
+            raise ValueError("لم يرجع الذكاء الاصطناعي أي محتوى.")
 
         ai_result = json.loads(raw_content)
 
@@ -155,9 +152,8 @@ async def generate_campaign(data: CampaignRequest):
             except Exception as db_err:
                 print(f"Supabase insert warning: {db_err}")
 
-        # تنسيق السيناريو وإرساله تلقائياً عبر Resend
         script_html = video_script_str.replace("\\n", "<br>").replace("\n", "<br>")
-        await send_outreach_emails(email, url, target_audience, marketing_message, script_html)
+        email_status = await send_outreach_emails(email, url, target_audience, marketing_message, script_html)
 
         return {
             "success": True,
@@ -165,7 +161,8 @@ async def generate_campaign(data: CampaignRequest):
             "target_audience": target_audience,
             "marketing_message": marketing_message,
             "video_script": raw_script,
-            "lead_status": lead_status
+            "lead_status": lead_status,
+            "email_status": email_status
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"حدث خطأ أثناء التحليل: {str(e)}")
@@ -175,10 +172,8 @@ def get_all_leads(x_admin_password: str = Header(None)):
     expected_password = os.environ.get("ADMIN_PASSWORD", "one23admin2026")
     if x_admin_password != expected_password:
         raise HTTPException(status_code=401, detail="كلمة مرور الإدارة غير صحيحة.")
-    
     if not supabase:
         raise HTTPException(status_code=500, detail="قاعدة البيانات غير متصلة.")
-    
     try:
         response = supabase.table("leads").select("*").order("created_at", desc=True).execute()
         return {"success": True, "leads": response.data}
