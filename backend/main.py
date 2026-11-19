@@ -9,7 +9,7 @@ import os
 import json
 import base64
 
-app = FastAPI(title="One23 Full AI SaaS Platform", version="6.0")
+app = FastAPI(title="One23 Full AI SaaS Platform", version="6.1")
 
 app.add_middleware(
     CORSMiddleware,
@@ -191,13 +191,14 @@ async def generate_media_preview(data: MediaRequest):
 
         image_prompt = f"Clean minimalist whiteboard animation explainer sketch on a pure white background, black ink hand-drawn vector lines with subtle blue accents, illustrating a modern business concept for {data.company_url}, no text, high clarity."
         image_response = client.images.generate(
-            model="dall-e-3",
+            model="gpt-image-1.5",
             prompt=image_prompt,
             size="1024x1024",
-            quality="standard",
             n=1
         )
-        storyboard_url = image_response.data[0].url
+        
+        img_data = image_response.data[0]
+        storyboard_url = f"data:image/png;base64,{img_data.b64json}" if getattr(img_data, "b64json", None) else img_data.url
 
         return {
             "success": True,
