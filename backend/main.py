@@ -8,7 +8,7 @@ import httpx
 import os
 import json
 
-app = FastAPI(title="One23 AI Engine + Supabase", version="3.0")
+app = FastAPI(title="One23 AI Engine + Supabase", version="3.1")
 
 app.add_middleware(
     CORSMiddleware,
@@ -18,7 +18,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# تهيئة OpenAI و Supabase من متغيرات البيئة في Render
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
@@ -77,11 +76,16 @@ async def generate_campaign(data: CampaignRequest):
             model="gpt-4o",
             response_format={"type": "json_object"},
             messages=[
-                {"role": "system", "content": "أنت مساعد ذكي متخصص في تحليل الشركات وصياغة حملات الفيديو التفاعلي بصيغة JSON."},
+                {"role": "system", "content": "أنت مساعد ذكي متخصص في تحليل الشركات وصياغة حملات الفيديو التفاعلي بصيغة JSON صالح."},
                 {"role": "user", "content": prompt}
             ]
         )
-        ai_result = json.loads(completion.choices[0].message.content)
+
+        raw_content = completion.choices[0].message.content
+        if not raw_content:
+            raise ValueError("لم يرجع الذكاء الاصطناعي أي محتوى، يرجى المحاولة مرة أخرى.")
+
+        ai_result = json.loads(raw_content)
 
         target_audience = ai_result.get("target_audience", "")
         marketing_message = ai_result.get("marketing_message", "")
@@ -89,7 +93,6 @@ async def generate_campaign(data: CampaignRequest):
         video_script_str = json.dumps(raw_script, ensure_ascii=False) if isinstance(raw_script, (list, dict)) else str(raw_script)
         lead_status = ai_result.get("lead_status", "مؤهل عالي (Hot Lead)")
 
-        # حفظ بيانات العميل والتحليل في Supabase تلقائياً
         if supabase:
             try:
                 supabase.table("leads").insert({
