@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from openai import OpenAI
@@ -8,7 +8,7 @@ import httpx
 import os
 import json
 
-app = FastAPI(title="One23 AI Engine + Supabase", version="3.1")
+app = FastAPI(title="One23 AI Engine + Supabase + Admin", version="4.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -42,7 +42,7 @@ async def fetch_website_text(url: str) -> str:
 
 @app.get("/")
 def read_root():
-    return {"status": "One23 AI Engine with Supabase is Active"}
+    return {"status": "One23 AI Engine with Admin Dashboard is Active"}
 
 @app.post("/api/generate-campaign")
 async def generate_campaign(data: CampaignRequest):
@@ -116,3 +116,19 @@ async def generate_campaign(data: CampaignRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"حدث خطأ أثناء التحليل: {str(e)}")
+
+# مسار لوحة التحكم الإدارية (محمي بكلمة مرور)
+@app.get("/api/admin/leads")
+def get_all_leads(x_admin_password: str = Header(None)):
+    expected_password = os.environ.get("ADMIN_PASSWORD", "one23admin2026")
+    if x_admin_password != expected_password:
+        raise HTTPException(status_code=401, detail="كلمة مرور الإدارة غير صحيحة.")
+    
+    if not supabase:
+        raise HTTPException(status_code=500, detail="قاعدة البيانات غير متصلة.")
+    
+    try:
+        response = supabase.table("leads").select("*").order("created_at", desc=True).execute()
+        return {"success": True, "leads": response.data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في جلب البيانات: {str(e)}")
