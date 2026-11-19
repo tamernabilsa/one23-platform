@@ -7,8 +7,9 @@ from bs4 import BeautifulSoup
 import httpx
 import os
 import json
+import base64
 
-app = FastAPI(title="One23 AI Engine + Supabase + Admin + Outreach", version="5.1")
+app = FastAPI(title="One23 Full AI SaaS Platform", version="6.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -30,6 +31,10 @@ ADMIN_NOTIFY_EMAIL = os.environ.get("ADMIN_NOTIFY_EMAIL", "")
 class CampaignRequest(BaseModel):
     company_url: str
     email: str | None = None
+
+class MediaRequest(BaseModel):
+    script_text: str
+    company_url: str
 
 async def fetch_website_text(url: str) -> str:
     if not url.startswith("http"):
@@ -91,7 +96,7 @@ async def send_outreach_emails(client_email: str, company_url: str, audience: st
 
 @app.get("/")
 def read_root():
-    return {"status": "One23 AI Engine with Outreach is Active"}
+    return {"status": "One23 Full AI SaaS Platform is Active"}
 
 @app.post("/api/generate-campaign")
 async def generate_campaign(data: CampaignRequest):
@@ -166,6 +171,41 @@ async def generate_campaign(data: CampaignRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"حدث خطأ أثناء التحليل: {str(e)}")
+
+@app.post("/api/generate-media")
+async def generate_media_preview(data: MediaRequest):
+    if not os.environ.get("OPENAI_API_KEY"):
+        raise HTTPException(status_code=500, detail="مفتاح OpenAI API غير مضاف.")
+
+    clean_text = data.script_text.strip()[:1000]
+    if not clean_text:
+        raise HTTPException(status_code=400, detail="نص السيناريو فارغ.")
+
+    try:
+        speech_response = client.audio.speech.create(
+            model="tts-1",
+            voice="onyx",
+            input=clean_text
+        )
+        audio_base64 = base64.b64encode(speech_response.content).decode("utf-8")
+
+        image_prompt = f"Clean minimalist whiteboard animation explainer sketch on a pure white background, black ink hand-drawn vector lines with subtle blue accents, illustrating a modern business concept for {data.company_url}, no text, high clarity."
+        image_response = client.images.generate(
+            model="dall-e-3",
+            prompt=image_prompt,
+            size="1024x1024",
+            quality="standard",
+            n=1
+        )
+        storyboard_url = image_response.data[0].url
+
+        return {
+            "success": True,
+            "audio_base64": audio_base64,
+            "storyboard_url": storyboard_url
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"تعذر توليد المعاينة الصوتية والبصرية: {str(e)}")
 
 @app.get("/api/admin/leads")
 def get_all_leads(x_admin_password: str = Header(None)):

@@ -38,7 +38,7 @@
                 حوّل موقع شركتك إلى <span class="text-blue-500">فيديو تسويقي تفاعلي</span> يجذب العملاء في ثوانٍ
             </h1>
             <p class="text-gray-400 text-base md:text-lg max-w-2xl mx-auto">
-                أدخل رابط موقعك الإلكتروني وسيقوم محرك الذكاء الاصطناعي بتحليل نشاطك، تحديد جمهورك المستهدف، وكتابة سيناريو فيديو سبورة بيضاء (Whiteboard) مخصص وإرسال نسخة منه لبريدك فوراً.
+                أدخل رابط موقعك الإلكتروني وسيقوم محرك الذكاء الاصطناعي بتحليل نشاطك، تحديد جمهورك المستهدف، وكتابة سيناريو فيديو سبورة بيضاء (Whiteboard) مع تعليق صوتي وتصور بصري فوري.
             </p>
         </div>
 
@@ -86,6 +86,23 @@
                     <strong class="text-white block mb-1">🎬 سيناريو الفيديو التفاعلي (Whiteboard Script):</strong> 
                     <div id="resScript" class="bg-gray-900/80 p-4 rounded-lg border border-gray-700/70 space-y-2 mt-1"></div>
                 </div>
+
+                <!-- زر وصندوق المعاينة الصوتية والبصرية -->
+                <div class="pt-3 border-t border-gray-700/80">
+                    <button onclick="generateMediaPreview()" id="mediaBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-3 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
+                        🎙️ استمع للتعليق الصوتي وشاهد مسودة المشهد (معاينة ذكية)
+                    </button>
+                    <div id="mediaPreviewBox" class="hidden mt-4 bg-gray-900 border border-indigo-500/40 rounded-xl p-4 space-y-4">
+                        <div>
+                            <p class="text-xs text-indigo-300 font-bold mb-2">🔊 التعليق الصوتي المقترح (يمكنك الاستماع أو التحميل من النقاط الثلاث):</p>
+                            <audio id="voiceoverPlayer" controls class="w-full h-10"></audio>
+                        </div>
+                        <div>
+                            <p class="text-xs text-indigo-300 font-bold mb-2">🎨 تصور المشهد الافتتاحي (Whiteboard Style):</p>
+                            <img id="storyboardImage" src="" alt="Whiteboard Scene Preview" class="w-full max-h-80 object-contain bg-white rounded-lg p-2">
+                        </div>
+                    </div>
+                </div>
                 
                 <p class="text-sm text-emerald-400 font-bold pt-3 border-t border-gray-700">
                     <strong>📊 تقييم الفرصة التسويقية:</strong> 
@@ -110,13 +127,13 @@
                 </div>
                 <div class="bg-gray-900 border border-gray-800 p-7 rounded-2xl">
                     <div class="w-12 h-12 bg-blue-600/20 text-blue-400 font-black text-xl rounded-xl flex items-center justify-center mb-5">2</div>
-                    <h3 class="text-xl font-bold mb-2">كتابة سيناريو مقنع</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">نصوغ سيناريو قصير ومباشر بأسلوب السبورة البيضاء (Whiteboard Animation) يشرح قيمة منتجك بوضوح دون ملل.</p>
+                    <h3 class="text-xl font-bold mb-2">كتابة سيناريو ومعاينة صوتية</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">نصوغ سيناريو قصير بأسلوب السبورة البيضاء (Whiteboard Animation) مع تعليق صوتي وتصور بصري فوري.</p>
                 </div>
                 <div class="bg-gray-900 border border-gray-800 p-7 rounded-2xl">
                     <div class="w-12 h-12 bg-blue-600/20 text-blue-400 font-black text-xl rounded-xl flex items-center justify-center mb-5">3</div>
                     <h3 class="text-xl font-bold mb-2">إنتاج ونشر الفيديو</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">نحول السيناريو إلى فيديو رسوم متحركة تفاعلي مع تعليق صوتي احترافي جاهز للنشر في موقعك وحملاتك الإعلانية.</p>
+                    <p class="text-gray-400 text-sm leading-relaxed">نحول السيناريو إلى فيديو رسوم متحركة تفاعلي متكامل جاهز للنشر في موقعك وحملاتك الإعلانية.</p>
                 </div>
             </div>
         </div>
@@ -131,7 +148,6 @@
             </div>
 
             <div class="grid md:grid-cols-3 gap-8">
-                <!-- الباقة الأولى -->
                 <div class="bg-gray-900 border border-gray-800 rounded-2xl p-8 flex flex-col justify-between">
                     <div>
                         <h3 class="text-xl font-bold mb-2">باقة البداية (Starter)</h3>
@@ -148,7 +164,6 @@
                     <a href="#ai-generator" class="w-full block text-center bg-gray-800 hover:bg-gray-700 font-bold py-3 rounded-xl transition">اطلب الباقة</a>
                 </div>
 
-                <!-- الباقة الثانية (الأكثر طلباً) -->
                 <div class="bg-gray-900 border-2 border-blue-600 rounded-2xl p-8 flex flex-col justify-between relative shadow-2xl shadow-blue-900/20">
                     <span class="absolute -top-3.5 right-6 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">الأكثر طلباً للشركات</span>
                     <div>
@@ -166,7 +181,6 @@
                     <a href="#ai-generator" class="w-full block text-center bg-blue-600 hover:bg-blue-700 font-bold py-3 rounded-xl transition">ابدأ الآن</a>
                 </div>
 
-                <!-- الباقة الثالثة -->
                 <div class="bg-gray-900 border border-gray-800 rounded-2xl p-8 flex flex-col justify-between">
                     <div>
                         <h3 class="text-xl font-bold mb-2">باقة المؤسسات (Enterprise)</h3>
@@ -217,7 +231,7 @@
         </div>
     </footer>
 
-    <!-- كود الربط مع الخادم السحابي وتنسيق النتائج -->
+    <!-- كود الربط مع الخادم السحابي وتوليد الصوت والمشاهد -->
     <script>
         async function startCampaign() {
             const urlInput = document.getElementById('companyUrl').value.trim();
@@ -225,6 +239,7 @@
             const btn = document.getElementById('submitBtn');
             const resultBox = document.getElementById('resultBox');
             const emailSentNotice = document.getElementById('emailSentNotice');
+            const mediaBox = document.getElementById('mediaPreviewBox');
 
             if (!urlInput) {
                 alert('الرجاء إدخال رابط الشركة أولاً');
@@ -235,6 +250,7 @@
             btn.disabled = true;
             resultBox.classList.add('hidden');
             emailSentNotice.classList.add('hidden');
+            mediaBox.classList.add('hidden');
 
             try {
                 const response = await fetch('https://one23-platform.onrender.com/api/generate-campaign', {
@@ -284,6 +300,42 @@
             } finally {
                 btn.innerText = 'ابدأ التحليل وتوليد السيناريو الآن';
                 btn.disabled = false;
+            }
+        }
+
+        async function generateMediaPreview() {
+            const scriptText = document.getElementById('resScript').innerText.trim();
+            const companyUrl = document.getElementById('companyUrl').value.trim();
+            const mediaBtn = document.getElementById('mediaBtn');
+            const mediaBox = document.getElementById('mediaPreviewBox');
+
+            if (!scriptText) return;
+
+            mediaBtn.innerText = 'جاري تسجيل الصوت ورسم المشهد بالذكاء الاصطناعي (قد يستغرق 15 ثانية)...';
+            mediaBtn.disabled = true;
+            mediaBox.classList.add('hidden');
+
+            try {
+                const res = await fetch('https://one23-platform.onrender.com/api/generate-media', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ script_text: scriptText, company_url: companyUrl })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    const player = document.getElementById('voiceoverPlayer');
+                    player.src = `data:audio/mp3;base64,${data.audio_base64}`;
+                    document.getElementById('storyboardImage').src = data.storyboard_url;
+                    mediaBox.classList.remove('hidden');
+                } else {
+                    alert(data.detail || 'حدث خطأ أثناء توليد الصوت والمشهد.');
+                }
+            } catch (err) {
+                alert('تعذر الاتصال بالخادم لتوليد المعاينة.');
+            } finally {
+                mediaBtn.innerText = '🎙️ إعادة توليد التعليق الصوتي ومسودة المشهد';
+                mediaBtn.disabled = false;
             }
         }
 
