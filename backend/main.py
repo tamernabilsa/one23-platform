@@ -9,7 +9,7 @@ import os
 import json
 import base64
 
-app = FastAPI(title="One23 Full AI SaaS Platform", version="6.1")
+app = FastAPI(title="One23 Full AI SaaS Platform", version="6.2")
 
 app.add_middleware(
     CORSMiddleware,
@@ -186,37 +186,3 @@ async def generate_media_preview(data: MediaRequest):
             model="tts-1",
             voice="onyx",
             input=clean_text
-        )
-        audio_base64 = base64.b64encode(speech_response.content).decode("utf-8")
-
-        image_prompt = f"Clean minimalist whiteboard animation explainer sketch on a pure white background, black ink hand-drawn vector lines with subtle blue accents, illustrating a modern business concept for {data.company_url}, no text, high clarity."
-        image_response = client.images.generate(
-            model="gpt-image-1.5",
-            prompt=image_prompt,
-            size="1024x1024",
-            n=1
-        )
-        
-        img_data = image_response.data[0]
-        storyboard_url = f"data:image/png;base64,{img_data.b64json}" if getattr(img_data, "b64json", None) else img_data.url
-
-        return {
-            "success": True,
-            "audio_base64": audio_base64,
-            "storyboard_url": storyboard_url
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"تعذر توليد المعاينة الصوتية والبصرية: {str(e)}")
-
-@app.get("/api/admin/leads")
-def get_all_leads(x_admin_password: str = Header(None)):
-    expected_password = os.environ.get("ADMIN_PASSWORD", "one23admin2026")
-    if x_admin_password != expected_password:
-        raise HTTPException(status_code=401, detail="كلمة مرور الإدارة غير صحيحة.")
-    if not supabase:
-        raise HTTPException(status_code=500, detail="قاعدة البيانات غير متصلة.")
-    try:
-        response = supabase.table("leads").select("*").order("created_at", desc=True).execute()
-        return {"success": True, "leads": response.data}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"خطأ في جلب البيانات: {str(e)}")
