@@ -111,4 +111,37 @@
                 
                 <div class="text-sm text-gray-300 leading-relaxed">
                     <strong class="text-white block mb-1">🎬 سيناريو الفيديو التفاعلي (Whiteboard & UGC):</strong> 
-                    <div id="resScript" class="brand-bg p-4 rounded-lg border border
+                    <div id="resScript" class="brand-bg p-4 rounded-lg border border-gray-800 space-y-2 mt-1"></div>
+                </div>
+
+                <!-- زر وصندوق المعاينة الصوتية والبصرية -->
+                <div class="pt-3 border-t border-gray-800">
+                    <button onclick="generateMediaPreview()" id="mediaBtn" class="w-full bg-gray-800 hover:bg-gray-700 border border-[#FF9900]/50 text-brand-orange text-sm font-bold py-3 px-4 rounded-xl transition flex items-center justify-center gap-2">
+                        🎙️ استمع للتعليق الصوتي وشاهد مسودة المشهد (معاينة ذكية)
+                    </button>
+                    <div id="mediaPreviewBox" class="hidden mt-4 brand-bg border border-[#FF9900]/40 rounded-xl p-4 space-y-4">
+                        <div>
+                            <p class="text-xs text-brand-orange font-bold mb-2">🔊 التعليق الصوتي المقترح (جاهز للاستماع والتحميل):</p>
+                            <audio id="voiceoverPlayer" controls class="w-full h-10"></audio>
+                        </div>
+                        <div>
+                            <p class="text-xs text-brand-orange font-bold mb-2">🎨 تصور المشهد الافتتاحي:</p>
+                            <img id="storyboardImage" src="" alt="Storyboard Preview" class="w-full max-h-80 object-contain rounded-lg">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="pt-3 border-t border-gray-800 flex flex-wrap items-center justify-between gap-3">
+                    <p class="text-sm text-emerald-400 font-bold">
+                        <strong>📊 تقييم الفرصة:</strong> <span id="resStatus"></span>
+                    </p>
+                    <a href="portal.html" class="text-xs brand-orange text-[#141920] font-extrabold px-4 py-2 rounded-lg">
+                        افتح بوابة العميل لمتابعة التنفيذ ←
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. الخدمات السبع المتكاملة -->
+    <section
