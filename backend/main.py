@@ -466,4 +466,7 @@ def get_all_leads(x_admin_password: str = Header(None)):
     if not supabase:
         raise HTTPException(status_code=500, detail="قاعدة البيانات غير متصلة.")
     try:
-        response
+        response = supabase.table("leads").select("*").order("created_at", desc=True).execute()
+        return {"success": True, "leads": response.data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في جلب البيانات: {str(e)}")
