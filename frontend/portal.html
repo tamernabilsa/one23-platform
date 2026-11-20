@@ -140,7 +140,7 @@
                     </div>
                     <div class="bg-[#0e1217] p-4 rounded-xl border border-gray-800 flex flex-col items-center justify-center">
                         <strong class="text-xs text-brand-orange block mb-2 self-start">🖼️ التصميم المقترح:</strong>
-                        <img id="csImage" src="" alt="Generated Design" class="w-full max-h-80 object-contain rounded-lg">
+                        <img id="csImage" src="" alt="Generated Design" class="w-full max-h-80 object-contain rounded-lg hidden">
                     </div>
                 </div>
             </section>
@@ -337,11 +337,13 @@
             const topic = document.getElementById('csTopic').value.trim();
             if (!topic) return alert('اكتب موضوع المنشور أولاً.');
             const btn = document.getElementById('csBtn');
-            btn.innerText = 'جاري الكتابة والتصميم (قد يستغرق 20 ثانية)...';
+            const imgEl = document.getElementById('csImage');
+            btn.innerText = 'جاري كتابة النص والسيناريو...';
             btn.disabled = true;
 
             try {
-                const res = await fetch(`${API_BASE}/api/portal/content-studio`, {
+                // 1. جلب النص والسيناريو أولاً (سريع جداً)
+                const textRes = await fetch(`${API_BASE}/api/portal/content-studio`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -349,26 +351,39 @@
                         brand_name: currentClient.brand_name || 'مشروعي',
                         brand_color: currentClient.brand_color || '#FF9900',
                         topic,
+                        generate_image: false
+                    })
+                });
+                const textData = await textRes.json();
+                if (!textRes.ok || !textData.success) {
+                    return alert(textData.detail || 'تعذر توليد النص.');
+                }
+
+                document.getElementById('csCaption').innerText = textData.content.post_caption || '';
+                document.getElementById('csScript').innerText = textData.content.ugc_script || '';
+                imgEl.classList.add('hidden');
+                document.getElementById('csResult').classList.remove('hidden');
+
+                // 2. توليد الصورة في طلب منفصل
+                btn.innerText = 'تم النص ✓ جاري تصميم الصورة...';
+                const imgRes = await fetch(`${API_BASE}/api/portal/content-studio`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        client_email: currentClient.email,
+                        brand_name: currentClient.brand_name || 'مشروعي',
+                        brand_color: currentClient.brand_color || '#FF9900',
+                        topic: textData.content.image_concept || topic,
                         generate_image: true
                     })
                 });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    document.getElementById('csCaption').innerText = data.content.post_caption || '';
-                    document.getElementById('csScript').innerText = data.content.ugc_script || '';
-                    const imgEl = document.getElementById('csImage');
-                    if (data.image_url) {
-                        imgEl.src = data.image_url;
-                        imgEl.classList.remove('hidden');
-                    } else {
-                        imgEl.classList.add('hidden');
-                    }
-                    document.getElementById('csResult').classList.remove('hidden');
-                } else {
-                    alert(data.detail || 'حدث خطأ أثناء توليد المحتوى.');
+                const imgData = await imgRes.json();
+                if (imgRes.ok && imgData.success && imgData.image_url) {
+                    imgEl.src = imgData.image_url;
+                    imgEl.classList.remove('hidden');
                 }
             } catch (err) {
-                alert('تعذر الاتصال بالخادم، حاول مرة أخرى.');
+                alert('تعذر الاتصال بالخادم، تأكد من جاهزية Render وحاول مرة أخرى.');
             } finally {
                 btn.innerText = 'توليد النص والتصميم والسيناريو 🎨';
                 btn.disabled = false;

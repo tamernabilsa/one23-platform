@@ -12,7 +12,7 @@ import hashlib
 import re
 import random
 
-app = FastAPI(title="One23 Full AI SaaS Platform", version="7.1")
+app = FastAPI(title="One23 Full AI SaaS Platform", version="7.2")
 
 app.add_middleware(
     CORSMiddleware,
@@ -357,67 +357,63 @@ def generate_brand_plan(data: BrandPlanRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"خطأ في توليد الخطة: {str(e)}")
 
-# --- 4. أداة استوديو المحتوى (Content Studio) ---
+# --- 4. أداة استوديو المحتوى (Content Studio - مقسمة لمنع Timeout) ---
 @app.post("/api/portal/content-studio")
 def generate_content_studio(data: ContentStudioRequest):
-    prompt = f"""
-    أنت مدير إبداعي في منصة One23.sa. اكتب محتوى تسويقياً احترافياً باللهجة السعودية البيضاء الجذابة لعلامة:
-    - اسم المشروع: {data.brand_name}
-    - الموضوع أو العرض: {data.topic}
+    if not data.generate_image:
+        # المرحلة 1: توليد النص والسيناريو بسرعة فائقة
+        prompt = f"""
+        أنت مدير إبداعي في منصة One23.sa. اكتب محتوى تسويقياً احترافياً باللهجة السعودية البيضاء الجذابة لعلامة:
+        - اسم المشروع: {data.brand_name}
+        - الموضوع أو العرض: {data.topic}
 
-    أعد النتيجة بصيغة JSON فقط:
-    {{
-        "post_caption": "نص المنشور التسويقي لمنصات التواصل الاجتماعي مع هاشتاقات مناسبة",
-        "ugc_script": "سيناريو فيديو قصير (Reels/TikTok) مدته 20 ثانية مع تعليق صوتي مقنع",
-        "image_concept": "وصف إنجليزي دقيق لتصميم إعلاني احترافي يعبر عن العرض بأسلوب نظيف وعصري بدون أي نصوص مكتوبة داخل الصورة"
-    }}
-    """
-    try:
-        completion = client.chat.completions.create(
-            model="gpt-4o",
-            response_format={"type": "json_object"},
-            messages=[
-                {"role": "system", "content": "أنت صانع محتوى تسويقي محترف ترد بصيغة JSON صالح."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        content_json = json.loads(completion.choices[0].message.content)
-        image_url = ""
-
-        if data.generate_image:
-            try:
-                img_prompt = f"{content_json.get('image_concept', 'Modern commercial product showcase')}, accent color {data.brand_color}, studio lighting, high resolution commercial photography, no text, no letters."
-                img_res = client.images.generate(
-                    model="gpt-image-1.5",
-                    prompt=img_prompt,
-                    size="1024x1024",
-                    n=1
-                )
-                img_obj = img_res.data[0]
-                b64_data = getattr(img_obj, "b64_json", None)
-                if b64_data:
-                    image_url = f"data:image/png;base64,{b64_data}"
-                elif getattr(img_obj, "url", None):
-                    image_url = img_obj.url
-            except Exception as img_err:
-                print(f"Image generation warning: {img_err}")
-
-        if supabase:
-            try:
-                supabase.table("client_assets").insert({
-                    "client_email": data.client_email.lower(),
-                    "asset_type": "content_post",
-                    "title": f"محتوى: {data.topic[:40]}",
-                    "content_data": json.dumps(content_json, ensure_ascii=False),
-                    "media_url": image_url if (image_url and not image_url.startswith("data:")) else "",
-                    "status": "جاهز للنشر"
-                }).execute()
-            except Exception as db_err:
-                print(f"DB insert warning: {db_err}")
-
-        return {"success": True, "content": content_json, "image_url": image_url}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"خطأ في استوديو المحتوى: {str(e)}")
+        أعد النتيجة بصيغة JSON فقط:
+        {{
+            "post_caption": "نص المنشور التسويقي لمنصات التواصل الاجتماعي مع هاشتاقات مناسبة",
+            "ugc_script": "سيناريو فيديو قصير (Reels/TikTok) مدته 20 ثانية مع تعليق صوتي مقنع",
+            "image_concept": "وصف إنجليزي دقيق لتصميم إعلاني احترافي يعبر عن العرض بأسلوب نظيف وعصري بدون أي نصوص مكتوبة داخل الصورة"
+        }}
+        """
+        try:
+            completion = client.chat.completions.create(
+                model="gpt-4o",
+                response_format={"type": "json_object"},
+                messages=[
+                    {"role": "system", "content": "أنت صانع محتوى تسويقي محترف ترد بصيغة JSON صالح."},
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            content_json = json.loads(completion.choices[0].message.content)
+            if supabase:
+                try:
+                    supabase.table("client_assets").insert({
+                        "client_email": data.client_email.lower(),
+                        "asset_type": "content_post",
+                        "title": f"محتوى: {data.topic[:40]}",
+                        "content_data": json.dumps(content_json, ensure_ascii=False),
+                        "status": "جاهز للنشر"
+                    }).execute()
+                except Exception as db_err:
+                    print(f"DB warning: {db_err}")
+            return {"success": True, "content": content_json}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"خطأ في توليد النص: {str(e)}")
+    else:
+        # المرحلة 2: توليد الصورة بشكل مستقل
+        try:
+            img_prompt = f"Modern commercial advertisement visual for {data.brand_name}, topic: {data.topic}, accent color {data.brand_color}, studio lighting, high quality commercial design, no text, no letters."
+            img_res = client.images.generate(
+                model="gpt-image-1.5",
+                prompt=img_prompt,
+                size="1024x1024",
+                n=1
+            )
+            img_obj = img_res.data[0]
+            b64_data = getattr(img_obj, "b64_json", None)
+            image_url = f"data:image/png;base64,{b64_data}" if b64_data else getattr(img_obj, "url", "")
+            return {"success": True, "image_url": image_url}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"خطأ في توليد التصميم: {str(e)}")
 
 # --- 5. منشئ صفحات الهبوط المصغرة (Landing Page Builder) ---
 @app.post("/api/portal/landing-page")
