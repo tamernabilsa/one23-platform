@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة العملاء | One23.sa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #0e1217; }
+        .brand-bg { background-color: #141920; }
+        .brand-orange { background-color: #FF9900; }
+        .brand-orange-hover:hover { background-color: #e68a00; }
+        .text-brand-orange { color: #FF9900; }
+    </style>
+</head>
+<body class="text-white min-h-screen">
+
+    <!-- شاشة تسجيل الدخول وإنشاء الحساب -->
+    <div id="authScreen" class="min-h-screen flex items-center justify-center p-6">
+        <div class="max-w-md w-full brand-bg border border-gray-800 rounded-2xl p-8 shadow-2xl">
+            <div class="text-center mb-6">
+                <a href="index.html" class="text-3xl font-black text-white">One<span class="text-brand-orange">23</span><span class="text-sm text-gray-400">.sa</span></a>
+                <p class="text-gray-400 text-sm mt-1">بوابة العملاء وإدارة الحملات الذكية</p>
+            </div>
+
+            <!-- أزرار التبديل بين دخول وتسجيل -->
+            <div class="grid grid-cols-2 gap-2 bg-[#0e1217] p-1 rounded-xl mb-6">
+                <button onclick="switchAuthTab('login')" id="tabLoginBtn" class="brand-orange text-[#141920] font-bold py-2 rounded-lg text-sm transition">تسجيل الدخول</button>
+                <button onclick="switchAuthTab('register')" id="tabRegisterBtn" class="text-gray-400 font-bold py-2 rounded-lg text-sm transition">حساب جديد</button>
+            </div>
+
+            <!-- نموذج تسجيل الدخول -->
+            <div id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold mb-1.5 text-gray-300">البريد الإلكتروني</label>
+                    <input type="email" id="loginEmail" placeholder="name@company.sa" class="w-full bg-[#0e1217] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white text-left" dir="ltr">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1.5 text-gray-300">كلمة المرور</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" class="w-full bg-[#0e1217] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white text-left" dir="ltr">
+                </div>
+                <button onclick="handleLogin()" id="loginSubmitBtn" class="w-full brand-orange brand-orange-hover text-[#141920] font-black py-3 rounded-xl transition">دخول البوابة</button>
+            </div>
+
+            <!-- نموذج إنشاء حساب جديد -->
+            <div id="registerForm" class="hidden space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold mb-1 text-gray-300">الاسم الكامل *</label>
+                    <input type="text" id="regName" placeholder="مثال: محمد العتيبي" class="w-full bg-[#0e1217] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1 text-gray-300">اسم المشروع أو الشركة *</label>
+                    <input type="text" id="regBrand" placeholder="مثال: متجر أفق للعطور" class="w-full bg-[#0e1217] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1 text-gray-300">البريد الإلكتروني *</label>
+                    <input type="email" id="regEmail" placeholder="name@company.sa" class="w-full bg-[#0e1217] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white text-left" dir="ltr">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1 text-gray-300">كلمة المرور *</label>
+                        <input type="password" id="regPassword" placeholder="••••••••" class="w-full bg-[#0e1217] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white text-left" dir="ltr">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1 text-gray-300">لون الهوية المفضل</label>
+                        <input type="color" id="regColor" value="#FF9900" class="w-full h-10 bg-[#0e1217] border border-gray-700 rounded-xl p-1 cursor-pointer">
+                    </div>
+                </div>
+                <button onclick="handleRegister()" id="regSubmitBtn" class="w-full brand-orange brand-orange-hover text-[#141920] font-black py-3 rounded-xl transition mt-2">إنشاء الحساب وبدء العمل 🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- واجهة لوحة تحكم العميل -->
+    <div id="portalDashboard" class="hidden">
+        <header class="brand-bg border-b border-gray-800 px-6 py-4">
+            <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <a href="index.html" class="text-2xl font-black text-white">One<span class="text-brand-orange">23</span><span class="text-xs text-gray-400">.sa</span></a>
+                    <span class="bg-[#FF9900]/15 text-brand-orange text-xs font-bold px-3 py-1 rounded-full" id="clientBrandBadge">مشروعي</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="text-xs text-gray-400 hidden sm:inline" id="clientWelcomeText"></span>
+                    <button onclick="logoutClient()" class="bg-red-600/20 hover:bg-red-600/30 text-red-400 text-xs font-bold px-4 py-2 rounded-xl transition">تسجيل خروج</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto p-6 space-y-6">
+            <!-- شريط التنقل بين الأدوات -->
+            <div class="flex flex-wrap gap-2 border-b border-gray-800 pb-4">
+                <button onclick="showSection('brandPlanSection')" class="nav-tab brand-orange text-[#141920] font-bold text-sm px-4 py-2.5 rounded-xl transition">📅 1. خطة العلامة التجارية</button>
+                <button onclick="showSection('contentStudioSection')" class="nav-tab bg-gray-800 text-gray-300 hover:text-white font-bold text-sm px-4 py-2.5 rounded-xl transition">🎬 2. استوديو المحتوى</button>
+                <button onclick="showSection('landingBuilderSection')" class="nav-tab bg-gray-800 text-gray-300 hover:text-white font-bold text-sm px-4 py-2.5 rounded-xl transition">🌐 3. منشئ صفحات الهبوط</button>
+                <button onclick="showSection('historySection')" class="nav-tab bg-gray-800 text-gray-300 hover:text-white font-bold text-sm px-4 py-2.5 rounded-xl transition">📂 4. أرشيف الأعمال والعملاء (CRM)</button>
+            </div>
+
+            <!-- القسم 1: خطة العلامة التجارية -->
+            <section id="brandPlanSection" class="tool-section brand-bg border border-gray-800 rounded-2xl p-6 space-y-5">
+                <div>
+                    <h2 class="text-xl font-black text-brand-orange">📅 خطة العلامة التجارية الذكية (Brand Plan)</h2>
+                    <p class="text-gray-400 text-sm">توليد جدول عروض ومحتوى شهري متوافق مع مواسم السعودية وأيام الرواتب.</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1.5 text-gray-300">نشاط مشروعك بالتفصيل *</label>
+                        <input type="text" id="bpBusinessType" placeholder="مثال: متجر قهوة مختصة وأدوات تحضير في الرياض" class="w-full bg-[#0e1217] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="runBrandPlan()" id="bpBtn" class="w-full brand-orange brand-orange-hover text-[#141920] font-black py-3 rounded-xl transition">توليد خطة الشهر الآن ✨</button>
+                    </div>
+                </div>
+                <div id="bpResult" class="hidden grid md:grid-cols-2 gap-4 pt-4"></div>
+            </section>
+
+            <!-- القسم 2: استوديو المحتوى -->
+            <section id="contentStudioSection" class="tool-section hidden brand-bg border border-gray-800 rounded-2xl p-6 space-y-5">
+                <div>
+                    <h2 class="text-xl font-black text-brand-orange">🎬 استوديو المحتوى (Content Studio)</h2>
+                    <p class="text-gray-400 text-sm">اكتب فكرة المنشور أو العرض، وسيقوم المحرك بكتابة النص، سيناريو الفيديو القصير، وتصميم الصورة.</p>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1.5 text-gray-300">موضوع المنشور أو العرض الترويجي *</label>
+                        <input type="text" id="csTopic" placeholder="مثال: خصم 25% بمناسبة يوم التأسيس على جميع الباقات" class="w-full bg-[#0e1217] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white">
+                    </div>
+                    <button onclick="runContentStudio()" id="csBtn" class="brand-orange brand-orange-hover text-[#141920] font-black px-8 py-3 rounded-xl transition">توليد النص والتصميم والسيناريو 🎨</button>
+                </div>
+                <div id="csResult" class="hidden grid md:grid-cols-2 gap-6 pt-4 border-t border-gray-800">
+                    <div class="space-y-4">
+                        <div class="bg-[#0e1217] p-4 rounded-xl border border-gray-800">
+                            <strong class="text-xs text-brand-orange block mb-1">📝 نص المنشور (Caption):</strong>
+                            <p id="csCaption" class="text-sm text-gray-200 whitespace-pre-line"></p>
+                        </div>
+                        <div class="bg-[#0e1217] p-4 rounded-xl border border-gray-800">
+                            <strong class="text-xs text-brand-orange block mb-1">🎥 سيناريو الفيديو القصير (Reels / TikTok):</strong>
+                            <p id="csScript" class="text-sm text-gray-200 whitespace-pre-line"></p>
+                        </div>
+                    </div>
+                    <div class="bg-[#0e1217] p-4 rounded-xl border border-gray-800 flex flex-col items-center justify-center">
+                        <strong class="text-xs text-brand-orange block mb-2 self-start">🖼️ التصميم المقترح:</strong>
+                        <img id="csImage" src="" alt="Generated Design" class="w-full max-h-80 object-contain rounded-lg">
+                    </div>
+                </div>
+            </section>
+
+            <!-- القسم 3: منشئ صفحات الهبوط -->
+            <section id="landingBuilderSection" class="tool-section hidden brand-bg border border-gray-800 rounded-2xl p-6 space-y-5">
+                <div>
+                    <h2 class="text-xl font-black text-brand-orange">🌐 منشئ صفحات الهبوط المصغرة (Landing Page Builder)</h2>
+                    <p class="text-gray-400 text-sm">أنشئ صفحة هبوط فورية لجمع بيانات عملائك المهتمين وتحويلهم إلى واتساب مباشرة.</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1 text-gray-300">العنوان الرئيسي للعرض *</label>
+                        <input type="text" id="lpHeadline" placeholder="مثال: احصل على استشارة مجانية وتصميم لموقعك" class="w-full bg-[#0e1217] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1 text-gray-300">رقم الواتساب لاستقبال العملاء (مع رمز الدولة) *</label>
+                        <input type="text" id="lpWhatsapp" placeholder="966500000000" class="w-full bg-[#0e1217] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white text-left" dir="ltr">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-semibold mb-1 text-gray-300">الوصف الفرعي وتفاصيل العرض *</label>
+                        <textarea id="lpDetails" rows="3" placeholder="اكتب مميزات عرضك هنا..." class="w-full bg-[#0e1217] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white"></textarea>
+                    </div>
+                </div>
+                <button onclick="createLandingPage()" id="lpBtn" class="brand-orange brand-orange-hover text-[#141920] font-black px-8 py-3 rounded-xl transition">نشر صفحة الهبوط والحصول على الرابط 🔗</button>
+                <div id="lpSuccessBox" class="hidden bg-emerald-500/10 border border-emerald-500/40 p-4 rounded-xl text-sm text-emerald-300">
+                    تم إنشاء صفحة الهبوط بنجاح! رابط الصفحة المباشر: <a id="lpCreatedLink" href="#" target="_blank" class="underline font-bold text-white" dir="ltr"></a>
+                </div>
+            </section>
+
+            <!-- القسم 4: الأرشيف وسجل العملاء (CRM) -->
+            <section id="historySection" class="tool-section hidden space-y-6">
+                <div class="brand-bg border border-gray-800 rounded-2xl p-6">
+                    <h3 class="text-lg font-bold text-brand-orange mb-4">👥 العملاء المسجلون عبر صفحات الهبوط (Leads CRM)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-sm">
+                            <thead class="bg-[#0e1217] text-gray-400">
+                                <tr>
+                                    <th class="p-3">التاريخ</th>
+                                    <th class="p-3">اسم العميل</th>
+                                    <th class="p-3">رقم الجوال</th>
+                                    <th class="p-3">الصفحة</th>
+                                    <th class="p-3">تواصل</th>
+                                </tr>
+                            </thead>
+                            <tbody id="crmTableBody" class="divide-y divide-gray-800"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="brand-bg border border-gray-800 rounded-2xl p-6">
+                    <h3 class="text-lg font-bold text-brand-orange mb-4">📂 سجل خططك ومحتواك السابق</h3>
+                    <div id="assetsList" class="grid md:grid-cols-2 gap-4"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const API_BASE = 'https://one23-platform.onrender.com';
+        let currentClient = JSON.parse(localStorage.getItem('one23_client') || 'null');
+
+        if (currentClient) {
+            initPortal();
+        }
+
+        function switchAuthTab(tab) {
+            document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+            document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
+            document.getElementById('tabLoginBtn').className = tab === 'login' ? 'brand-orange text-[#141920] font-bold py-2 rounded-lg text-sm transition' : 'text-gray-400 font-bold py-2 rounded-lg text-sm transition';
+            document.getElementById('tabRegisterBtn').className = tab === 'register' ? 'brand-orange text-[#141920] font-bold py-2 rounded-lg text-sm transition' : 'text-gray-400 font-bold py-2 rounded-lg text-sm transition';
+        }
+
+        async function handleRegister() {
+            const full_name = document.getElementById('regName').value.trim();
+            const brand_name = document.getElementById('regBrand').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value.trim();
+            const brand_color = document.getElementById('regColor').value;
+
+            if (!full_name || !email || !password) return alert('الرجاء إكمال الحقول الأساسية.');
+            const btn = document.getElementById('regSubmitBtn');
+            btn.innerText = 'جاري إنشاء الحساب...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/portal/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ full_name, brand_name, email, password, brand_color })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    localStorage.setItem('one23_client', JSON.stringify(data.client));
+                    currentClient = data.client;
+                    initPortal();
+                } else {
+                    alert(data.detail || 'تعذر إنشاء الحساب.');
+                }
+            } catch (e) {
+                alert('خطأ في الاتصال بالخادم.');
+            } finally {
+                btn.innerText = 'إنشاء الحساب وبدء العمل 🚀';
+                btn.disabled = false;
+            }
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            if (!email || !password) return alert('أدخل البريد الإلكتروني وكلمة المرور.');
+
+            const btn = document.getElementById('loginSubmitBtn');
+            btn.innerText = 'جاري الدخول...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/portal/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    localStorage.setItem('one23_client', JSON.stringify(data.client));
+                    currentClient = data.client;
+                    initPortal();
+                } else {
+                    alert(data.detail || 'بيانات الدخول غير صحيحة.');
+                }
+            } catch (e) {
+                alert('خطأ في الاتصال بالخادم.');
+            } finally {
+                btn.innerText = 'دخول البوابة';
+                btn.disabled = false;
+            }
+        }
+
+        function initPortal() {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('portalDashboard').classList.remove('hidden');
+            document.getElementById('clientBrandBadge').innerText = currentClient.brand_name || 'مشروعي';
+            document.getElementById('clientWelcomeText').innerText = `مرحباً، ${currentClient.full_name}`;
+            loadDashboardData();
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.tool-section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(sectionId).classList.remove('hidden');
+            if (sectionId === 'historySection') loadDashboardData();
+        }
+
+        async function runBrandPlan() {
+            const business_type = document.getElementById('bpBusinessType').value.trim();
+            if (!business_type) return alert('اكتب مجال مشروعك أولاً.');
+            const btn = document.getElementById('bpBtn');
+            btn.innerText = 'جاري بناء خطة الشهر...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/portal/brand-plan`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        client_email: currentClient.email,
+                        brand_name: currentClient.brand_name,
+                        business_type
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    const container = document.getElementById('bpResult');
+                    container.innerHTML = (data.plan.weeks || []).map(w => `
+                        <div class="bg-[#0e1217] border border-gray-800 p-4 rounded-xl space-y-2">
+                            <span class="text-xs font-black text-brand-orange">${w.week}</span>
+                            <h4 class="font-bold text-white text-sm">🎁 العرض: ${w.offer_idea}</h4>
+                            <p class="text-xs text-gray-300">📱 المحتوى: ${w.content_angle}</p>
+                            <p class="text-xs text-emerald-400">💡 السبب التسويقي: ${w.marketing_reason}</p>
+                        </div>
+                    `).join('');
+                    container.classList.remove('hidden');
+                }
+            } finally {
+                btn.innerText = 'توليد خطة الشهر الآن ✨';
+                btn.disabled = false;
+            }
+        }
+
+        async function runContentStudio() {
+            const topic = document.getElementById('csTopic').value.trim();
+            if (!topic) return alert('اكتب موضوع المنشور أولاً.');
+            const btn = document.getElementById('csBtn');
+            btn.innerText = 'جاري الكتابة والتصميم (قد يستغرق 15 ثانية)...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/portal/content-studio`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        client_email: currentClient.email,
+                        brand_name: currentClient.brand_name,
+                        brand_color: currentClient.brand_color,
+                        topic,
+                        generate_image: true
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    document.getElementById('csCaption').innerText = data.content.post_caption || '';
+                    document.getElementById('csScript').innerText = data.content.ugc_script || '';
+                    document.getElementById('csImage').src = data.image_url || '';
+                    document.getElementById('csResult').classList.remove('hidden');
+                }
+            } finally {
+                btn.innerText = 'توليد النص والتصميم والسيناريو 🎨';
+                btn.disabled = false;
+            }
+        }
+
+        async function createLandingPage() {
+            const headline = document.getElementById('lpHeadline').value.trim();
+            const whatsapp_number = document.getElementById('lpWhatsapp').value.trim();
+            const offer_details = document.getElementById('lpDetails').value.trim();
+            if (!headline || !offer_details) return alert('أدخل عنوان العرض وتفاصيله.');
+
+            const btn = document.getElementById('lpBtn');
+            btn.innerText = 'جاري نشر الصفحة...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/portal/landing-page`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        client_email: currentClient.email,
+                        brand_name: currentClient.brand_name,
+                        headline,
+                        subheadline: currentClient.brand_name,
+                        offer_details,
+                        whatsapp_number,
+                        accent_color: currentClient.brand_color
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    const url = `${window.location.origin}/landing.html?slug=${data.page.slug}`;
+                    const linkEl = document.getElementById('lpCreatedLink');
+                    linkEl.href = url;
+                    linkEl.innerText = url;
+                    document.getElementById('lpSuccessBox').classList.remove('hidden');
+                }
+            } finally {
+                btn.innerText = 'نشر صفحة الهبوط والحصول على الرابط 🔗';
+                btn.disabled = false;
+            }
+        }
+
+        async function loadDashboardData() {
+            const res = await fetch(`${API_BASE}/api/portal/dashboard?email=${encodeURIComponent(currentClient.email)}`);
+            const data = await res.json();
+            if (!data.success) return;
+
+            const crmBody = document.getElementById('crmTableBody');
+            crmBody.innerHTML = data.page_leads.length ? data.page_leads.map(l => `
+                <tr>
+                    <td class="p-3 text-xs text-gray-400">${new Date(l.created_at).toLocaleDateString('ar-SA')}</td>
+                    <td class="p-3 font-bold">${l.customer_name}</td>
+                    <td class="p-3" dir="ltr">${l.customer_phone}</td>
+                    <td class="p-3 text-xs text-gray-400">${l.page_slug}</td>
+                    <td class="p-3"><a href="https://wa.me/${l.customer_phone.replace(/[^0-9]/g,'')}" target="_blank" class="bg-emerald-600 text-xs font-bold px-3 py-1 rounded-lg">واتساب</a></td>
+                </tr>
+            `).join('') : '<tr><td colspan="5" class="p-4 text-center text-gray-500">لا يوجد عملاء مسجلون بعد.</td></tr>';
+
+            const assetsList = document.getElementById('assetsList');
+            assetsList.innerHTML = data.assets.length ? data.assets.map(a => `
+                <div class="bg-[#0e1217] border border-gray-800 p-4 rounded-xl">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs text-brand-orange font-bold">${a.asset_type}</span>
+                        <span class="text-xs bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded">${a.status}</span>
+                    </div>
+                    <h4 class="font-bold text-sm">${a.title}</h4>
+                    <p class="text-xs text-gray-500 mt-1">${new Date(a.created_at).toLocaleDateString('ar-SA')}</p>
+                </div>
+            `).join('') : '<p class="text-gray-500 text-sm">لا توجد أعمال محفوظة بعد.</p>';
+        }
+
+        function logoutClient() {
+            localStorage.removeItem('one23_client');
+            location.reload();
+        }
+    </script>
+</body>
+</html>

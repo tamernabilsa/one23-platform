@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عرض خاص | One23.sa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Cairo', sans-serif; background-color: #0e1217; }</style>
+</head>
+<body class="text-white min-h-screen flex items-center justify-center p-6">
+    <div id="pageCard" class="max-w-xl w-full bg-[#141920] border border-gray-800 rounded-2xl p-8 shadow-2xl text-center space-y-6">
+        <span id="brandSub" class="inline-block bg-[#FF9900]/15 text-[#FF9900] text-xs font-bold px-4 py-1.5 rounded-full">جاري التحميل...</span>
+        <h1 id="pageHeadline" class="text-2xl md:text-4xl font-black leading-tight"></h1>
+        <p id="pageOffer" class="text-gray-300 text-base leading-relaxed whitespace-pre-line"></p>
+
+        <form onsubmit="submitLead(event)" class="bg-[#0e1217] border border-gray-800 p-6 rounded-xl space-y-4 text-right">
+            <h3 class="font-bold text-center text-sm text-[#FF9900]">سجّل بياناتك للاستفادة من العرض الآن</h3>
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">الاسم الكامل *</label>
+                <input type="text" id="custName" required class="w-full bg-[#141920] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">رقم الجوال (واتساب) *</label>
+                <input type="tel" id="custPhone" required placeholder="05xxxxxxxx" class="w-full bg-[#141920] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white text-left" dir="ltr">
+            </div>
+            <button type="submit" id="leadSubmitBtn" class="w-full bg-[#FF9900] hover:bg-[#e68a00] text-[#141920] font-black py-3 rounded-xl transition">إرسال الطلب الآن ✓</button>
+        </form>
+        <p class="text-[11px] text-gray-600">مدعوم بواسطة منصة One23.sa</p>
+    </div>
+
+    <script>
+        const API_BASE = 'https://one23-platform.onrender.com';
+        const slug = new URLSearchParams(window.location.search).get('slug');
+        let pageData = null;
+
+        async function loadPage() {
+            if (!slug) return;
+            const res = await fetch(`${API_BASE}/api/public/landing/${slug}`);
+            const data = await res.json();
+            if (res.ok && data.success) {
+                pageData = data.page;
+                document.getElementById('brandSub').innerText = pageData.subheadline;
+                document.getElementById('pageHeadline').innerText = pageData.headline;
+                document.getElementById('pageOffer').innerText = pageData.offer_details;
+            }
+        }
+
+        async function submitLead(e) {
+            e.preventDefault();
+            const btn = document.getElementById('leadSubmitBtn');
+            btn.innerText = 'جاري الإرسال...';
+            btn.disabled = true;
+
+            const customer_name = document.getElementById('custName').value.trim();
+            const customer_phone = document.getElementById('custPhone').value.trim();
+
+            const res = await fetch(`${API_BASE}/api/public/landing/lead`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ page_slug: slug, customer_name, customer_phone })
+            });
+
+            if (res.ok) {
+                alert('تم استلام طلبك بنجاح! سيتواصل معك فريقنا قريباً.');
+                if (pageData && pageData.whatsapp_number) {
+                    const wa = pageData.whatsapp_number.replace(/[^0-9]/g, '');
+                    window.open(`https://wa.me/${wa}?text=${encodeURIComponent('مرحباً، سجلت في عرض: ' + pageData.headline)}`, '_blank');
+                }
+            }
+            btn.innerText = 'إرسال الطلب الآن ✓';
+            btn.disabled = false;
+        }
+        loadPage();
+    </script>
+</body>
+</html>
