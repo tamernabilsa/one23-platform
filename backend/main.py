@@ -12,7 +12,7 @@ import hashlib
 import re
 import random
 
-app = FastAPI(title="One23 Full AI SaaS Platform", version="7.0")
+app = FastAPI(title="One23 Full AI SaaS Platform", version="7.1")
 
 app.add_middleware(
     CORSMiddleware,
@@ -243,7 +243,8 @@ async def generate_media_preview(data: MediaRequest):
             n=1
         )
         img_data = image_response.data[0]
-        storyboard_url = f"data:image/png;base64,{img_data.b64json}" if getattr(img_data, "b64json", None) else img_data.url
+        b64_data = getattr(img_data, "b64_json", None)
+        storyboard_url = f"data:image/png;base64,{b64_data}" if b64_data else getattr(img_data, "url", "")
 
         return {
             "success": True,
@@ -384,25 +385,35 @@ def generate_content_studio(data: ContentStudioRequest):
         image_url = ""
 
         if data.generate_image:
-            img_prompt = f"{content_json.get('image_concept', 'Modern commercial product showcase')}, accent color {data.brand_color}, studio lighting, high resolution commercial photography, no text, no letters."
-            img_res = client.images.generate(
-                model="gpt-image-1.5",
-                prompt=img_prompt,
-                size="1024x1024",
-                n=1
-            )
-            img_obj = img_res.data[0]
-            image_url = f"data:image/png;base64,{img_obj.b64json}" if getattr(img_obj, "b64json", None) else img_obj.url
+            try:
+                img_prompt = f"{content_json.get('image_concept', 'Modern commercial product showcase')}, accent color {data.brand_color}, studio lighting, high resolution commercial photography, no text, no letters."
+                img_res = client.images.generate(
+                    model="gpt-image-1.5",
+                    prompt=img_prompt,
+                    size="1024x1024",
+                    n=1
+                )
+                img_obj = img_res.data[0]
+                b64_data = getattr(img_obj, "b64_json", None)
+                if b64_data:
+                    image_url = f"data:image/png;base64,{b64_data}"
+                elif getattr(img_obj, "url", None):
+                    image_url = img_obj.url
+            except Exception as img_err:
+                print(f"Image generation warning: {img_err}")
 
         if supabase:
-            supabase.table("client_assets").insert({
-                "client_email": data.client_email.lower(),
-                "asset_type": "content_post",
-                "title": f"محتوى: {data.topic[:40]}",
-                "content_data": json.dumps(content_json, ensure_ascii=False),
-                "media_url": image_url if not image_url.startswith("data:") else "",
-                "status": "جاهز للنشر"
-            }).execute()
+            try:
+                supabase.table("client_assets").insert({
+                    "client_email": data.client_email.lower(),
+                    "asset_type": "content_post",
+                    "title": f"محتوى: {data.topic[:40]}",
+                    "content_data": json.dumps(content_json, ensure_ascii=False),
+                    "media_url": image_url if (image_url and not image_url.startswith("data:")) else "",
+                    "status": "جاهز للنشر"
+                }).execute()
+            except Exception as db_err:
+                print(f"DB insert warning: {db_err}")
 
         return {"success": True, "content": content_json, "image_url": image_url}
     except Exception as e:

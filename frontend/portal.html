@@ -322,7 +322,11 @@
                         </div>
                     `).join('');
                     container.classList.remove('hidden');
+                } else {
+                    alert(data.detail || 'حدث خطأ أثناء توليد الخطة.');
                 }
+            } catch (err) {
+                alert('تعذر الاتصال بالخادم.');
             } finally {
                 btn.innerText = 'توليد خطة الشهر الآن ✨';
                 btn.disabled = false;
@@ -333,7 +337,7 @@
             const topic = document.getElementById('csTopic').value.trim();
             if (!topic) return alert('اكتب موضوع المنشور أولاً.');
             const btn = document.getElementById('csBtn');
-            btn.innerText = 'جاري الكتابة والتصميم (قد يستغرق 15 ثانية)...';
+            btn.innerText = 'جاري الكتابة والتصميم (قد يستغرق 20 ثانية)...';
             btn.disabled = true;
 
             try {
@@ -342,8 +346,8 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         client_email: currentClient.email,
-                        brand_name: currentClient.brand_name,
-                        brand_color: currentClient.brand_color,
+                        brand_name: currentClient.brand_name || 'مشروعي',
+                        brand_color: currentClient.brand_color || '#FF9900',
                         topic,
                         generate_image: true
                     })
@@ -352,9 +356,19 @@
                 if (res.ok && data.success) {
                     document.getElementById('csCaption').innerText = data.content.post_caption || '';
                     document.getElementById('csScript').innerText = data.content.ugc_script || '';
-                    document.getElementById('csImage').src = data.image_url || '';
+                    const imgEl = document.getElementById('csImage');
+                    if (data.image_url) {
+                        imgEl.src = data.image_url;
+                        imgEl.classList.remove('hidden');
+                    } else {
+                        imgEl.classList.add('hidden');
+                    }
                     document.getElementById('csResult').classList.remove('hidden');
+                } else {
+                    alert(data.detail || 'حدث خطأ أثناء توليد المحتوى.');
                 }
+            } catch (err) {
+                alert('تعذر الاتصال بالخادم، حاول مرة أخرى.');
             } finally {
                 btn.innerText = 'توليد النص والتصميم والسيناريو 🎨';
                 btn.disabled = false;
